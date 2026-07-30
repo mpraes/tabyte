@@ -141,9 +141,20 @@ echo "$RESP_IX"
 echo "$RESP_IX" | grep -q '"kind":"primary_key"'
 echo "$RESP_IX" | grep -q '"kind":"index"'
 echo "$RESP_IX" | grep -q '"name":"idx_users_email"'
+echo "$RESP_IX" | grep -q '"estimated_total_bytes":134000'
+echo "$RESP_IX" | grep -q '"index_bytes":55000'
 ID_IX=$(echo "$RESP_IX" | sed -n 's/.*"id":"\([^"]*\)".*/\1/p')
 test -n "$ID_IX"
+
+echo "== patch refreshes index bytes =="
+PATCH_IX=$(curl -sf -X PATCH "$BASE/analysis-sessions/$ID_IX/tables/users" \
+  -H 'Content-Type: application/json' \
+  -d '{"assumed_row_count":2000}')
+echo "$PATCH_IX"
+echo "$PATCH_IX" | grep -q '"index_bytes":110000'          # (4+51)*2000
+echo "$PATCH_IX" | grep -q '"estimated_total_bytes":268000' # 79*2000 + 110000
 curl -s -o /dev/null -X DELETE "$BASE/analysis-sessions/$ID_IX"
+
 
 echo "$RESP_IX" | grep -q '"kind":"primary_key"'
 echo "$RESP_IX" | grep -q '"estimated_bytes":4000'   # careful: also matches column bytes — prefer tighter check
