@@ -63,6 +63,8 @@ func HandleCreateAnalysisSession(store *application.SessionStore) http.HandlerFu
 			"estimated_total_bytes": session.EstimatedTotalBytes,
 			"warnings":              warningsJSON(session.Warnings),
 			"warning_count":         len(session.Warnings),
+			"signals":               signalsJSON(session.Signals),
+			"signal_count":          len(session.Signals),
 		})
 	}
 }
@@ -98,6 +100,8 @@ func HandleGetAnalysisSession(store *application.SessionStore) http.HandlerFunc 
 			"tables":      tablesJSONWithCalculation(session.Tables),
 			"warnings":    warningsJSON(session.Warnings),
 			"warning_count":  len(session.Warnings),
+			"signals":       signalsJSON(session.Signals),
+			"signal_count":  len(session.Signals),
 			"estimated_total_bytes": session.EstimatedTotalBytes,
 		})
 	}
@@ -201,6 +205,22 @@ func warningsJSON(warnings []domain.Warning) []map[string]any {
 	return out
 }
 
+func signalsJSON(signals []domain.Signal) []map[string]any {
+	out := make([]map[string]any, 0, len(signals))
+	for _, s := range signals {
+		item := map[string]any{
+			"code":    s.Code,
+			"message": s.Message,
+			"table":   s.Table,
+		}
+		if s.Column != "" {
+			item["column"] = s.Column
+		}
+		out = append(out, item)
+	}
+	return out
+}
+
 func HandleUpdateTableRowCount(store *application.SessionStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		sessionID := r.PathValue("sessionId")
@@ -231,6 +251,8 @@ func HandleUpdateTableRowCount(store *application.SessionStore) http.HandlerFunc
 			"tables":      tablesJSONWithCalculation(session.Tables),
 			"warnings":    warningsJSON(session.Warnings),
 			"warning_count":  len(session.Warnings),
+			"signals":       signalsJSON(session.Signals),
+			"signal_count":  len(session.Signals),
 			"estimated_total_bytes": session.EstimatedTotalBytes,
 		})
 	}

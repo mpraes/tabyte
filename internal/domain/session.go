@@ -9,4 +9,5 @@ type AnalysisSession struct {
 	Tables              []Table
 	EstimatedTotalBytes *int64
 	Warnings            []Warning
+	Signals             []Signal
 }
