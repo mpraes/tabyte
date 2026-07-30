@@ -16,11 +16,17 @@ func NormalizeColumn(col domain.Column) domain.Column {
 		col.NormalizedType = "smallint"
 	case "tinyint":
 		col.NormalizedType = "tinyint"
-	case "varchar", "nvarchar":
+	case "varchar":
 		col.NormalizedType = "varchar"
 		col.Length = info.Length
-	case "char", "nchar":
+	case "nvarchar":
+		col.NormalizedType = "nvarchar"
+		col.Length = info.Length
+	case "char":
 		col.NormalizedType = "char"
+		col.Length = info.Length
+	case "nchar":
+		col.NormalizedType = "nchar"
 		col.Length = info.Length
 	case "text", "ntext":
 		col.NormalizedType = "text"
@@ -32,8 +38,17 @@ func NormalizeColumn(col domain.Column) domain.Column {
 		col.NormalizedType = "boolean"
 	case "uniqueidentifier":
 		col.NormalizedType = "uuid"
-	case "datetime", "datetime2", "smalldatetime":
-		col.NormalizedType = "timestamp"
+	case "datetime":
+		col.NormalizedType = "datetime"
+	case "datetime2":
+		col.NormalizedType = "datetime2"
+		if info.Length != nil {
+			col.Scale = info.Length
+		} else if info.Precision != nil {
+			col.Scale = info.Precision
+		}
+	case "smalldatetime":
+		col.NormalizedType = "smalldatetime"
 	case "date":
 		col.NormalizedType = "date"
 	case "float", "real":

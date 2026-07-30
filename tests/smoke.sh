@@ -21,6 +21,7 @@ echo "$RESP" | grep -q '"name":"a"'
 echo "$RESP" | grep -q '"normalized_type":"int"'
 echo "$RESP" | grep -q '"name":"id"'
 echo "$RESP" | grep -qi 'INT'
+echo "$RESP" | grep -q '"estimated_bytes":4'
 
 echo "== get $ID =="
 GET_RESP=$(curl -sf "$BASE/analysis-sessions/$ID")
@@ -56,6 +57,8 @@ RESP3=$(curl -sf -X POST "$BASE/analysis-sessions" \
 echo "$RESP3"
 echo "$RESP3" | grep -q '"normalized_type":"varchar"'
 echo "$RESP3" | grep -q '"length":100'
+echo "$RESP3" | grep -q '"assumed_avg_length":50'
+echo "$RESP3" | grep -q '"estimated_bytes":51'
 ID3=$(echo "$RESP3" | sed -n 's/.*"id":"\([^"]*\)".*/\1/p')
 test -n "$ID3"
 curl -s -o /dev/null -X DELETE "$BASE/analysis-sessions/$ID3"
@@ -65,9 +68,13 @@ RESP4=$(curl -sf -X POST "$BASE/analysis-sessions" \
   -H 'Content-Type: application/json' \
   -d '{"engine":"sqlserver","source_name":"s.sql","ddl_text":"CREATE TABLE t (name NVARCHAR(50));"}')
 echo "$RESP4"
-echo "$RESP4" | grep -q '"normalized_type":"varchar"'
+echo "$RESP4" | grep -q '"normalized_type":"nvarchar"'
 echo "$RESP4" | grep -q '"length":50'
-
+echo "$RESP4" | grep -q '"assumed_avg_length":50'   # 50 < 64 → use full length
+echo "$RESP4" | grep -q '"estimated_bytes":102'      # 50*2+2
+ID4=$(echo "$RESP4" | sed -n 's/.*"id":"\([^"]*\)".*/\1/p')
+test -n "$ID4"
+curl -s -o /dev/null -X DELETE "$BASE/analysis-sessions/$ID4"
 
 echo "== parse two tables =="
 RESP2=$(curl -sf -X POST "$BASE/analysis-sessions" \

@@ -33,7 +33,7 @@ func CreateSession(store *SessionStore, in CreateSessionInput) (domain.AnalysisS
 	}
 
 	tables := parser.ParseTables(ddl)
-	tables = normalizeTables(eng, tables)
+	tables = enrichTables(eng, tables)
 	if len(tables) == 0 {
 		return domain.AnalysisSession{}, ErrNoTablesFound
 	}
