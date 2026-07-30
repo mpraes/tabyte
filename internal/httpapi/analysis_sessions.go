@@ -138,6 +138,12 @@ func tablesJSON(tables []domain.Table) []map[string]any {
 				m["scale"] = *c.Scale
 			}
 			cols = append(cols, m)
+			if c.AssumedAvgLength != nil {
+				m["assumed_avg_length"] = *c.AssumedAvgLength
+			}
+			if c.EstimatedBytes != nil {
+				m["estimated_bytes"] = *c.EstimatedBytes
+			}
 		}
 		out = append(out, map[string]any{
 			"name":         t.Name,
