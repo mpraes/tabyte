@@ -43,6 +43,7 @@ func CreateSession(store *SessionStore, in CreateSessionInput) (domain.AnalysisS
 	}
 	total := sumSchemaBytes(tables) 
 	warnings := collectWarnings(tables)
+	signals := collectSignals(tables)
 
 	session := domain.AnalysisSession{
 		ID:                  fmt.Sprintf("as_%d", time.Now().UnixNano()),
@@ -53,6 +54,7 @@ func CreateSession(store *SessionStore, in CreateSessionInput) (domain.AnalysisS
 		Tables:              tables,
 		EstimatedTotalBytes: &total,
 		Warnings:            warnings,
+		Signals:             signals,
 	}
 	store.Save(session)
 	return session, nil

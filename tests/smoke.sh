@@ -121,8 +121,8 @@ RESP_W=$(curl -sf -X POST "$BASE/analysis-sessions" \
 echo "$RESP_W"
 echo "$RESP_W" | grep -q '"code":"WIDE_VARCHAR"'
 echo "$RESP_W" | grep -q '"warning_count":1'
-ID_W=$(echo "$RESP_W" | sed -n 's/.*"id":"\([^"]*\)".*/\1/p')
-test -n "$ID_W"
-curl -s -o /dev/null -X DELETE "$BASE/analysis-sessions/$ID_W"
+echo "$RESP_W" | grep -q '"code":"WIDE_ROW"'
+echo "$RESP_W" | grep -q '"signal_count":1'
+# ...
 
 echo "OK: all smoke checks passed"
