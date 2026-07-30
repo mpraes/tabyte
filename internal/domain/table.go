@@ -1,5 +1,6 @@
 package domain
 
 type Table struct {
-	Name string
+	Name    string
+	Columns []Column
 }

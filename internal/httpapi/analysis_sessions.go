@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/mpraes/tabyte/internal/application"
+	"github.com/mpraes/tabyte/internal/domain"
 )
 
 type createSessionRequest struct {
@@ -33,16 +34,25 @@ func HandleCreateAnalysisSession(store *application.SessionStore) http.HandlerFu
 
 		tables := make([]map[string]any, 0, len(session.Tables))
 		for _, t := range session.Tables {
+			cols := make([]map[string]any, 0, len(t.Columns))
+			for _, c := range t.Columns {
+				cols = append(cols, map[string]any{
+					"name":          c.Name,
+					"original_type": c.OriginalType,
+				})
+			}
 			tables = append(tables, map[string]any{
-				"name": t.Name,
+				"name":         t.Name,
+				"column_count": len(t.Columns),
+				"columns":      cols,
 			})
 		}
 		WriteJSON(w, http.StatusCreated, map[string]any{
-			"id":     session.ID,
-			"engine": session.Engine,
-			"status": session.Status,
+			"id":          session.ID,
+			"engine":      session.Engine,
+			"status":      session.Status,
 			"table_count": len(session.Tables),
-			"tables":      tables,
+			"tables":      tablesJSON(session.Tables),
 		})
 	}
 }
@@ -57,8 +67,17 @@ func HandleGetAnalysisSession(store *application.SessionStore) http.HandlerFunc 
 		}
 		tables := make([]map[string]any, 0, len(session.Tables))
 		for _, t := range session.Tables {
+			cols := make([]map[string]any, 0, len(t.Columns))
+			for _, c := range t.Columns {
+				cols = append(cols, map[string]any{
+					"name":          c.Name,
+					"original_type": c.OriginalType,
+				})
+			}
 			tables = append(tables, map[string]any{
-				"name": t.Name,
+				"name":         t.Name,
+				"column_count": len(t.Columns),
+				"columns":      cols,
 			})
 		}
 		WriteJSON(w, http.StatusOK, map[string]any{
@@ -66,7 +85,7 @@ func HandleGetAnalysisSession(store *application.SessionStore) http.HandlerFunc 
 			"engine":      session.Engine,
 			"source_name": session.SourceName,
 			"status":      session.Status,
-			"tables":      tables,
+			"tables":      tablesJSON(session.Tables),
 		})
 	}
 }
@@ -97,4 +116,23 @@ func HandleDeleteAnalysisSession(store *application.SessionStore) http.HandlerFu
 		}
 		w.WriteHeader(http.StatusNoContent) // 204, no body
 	}
+}
+
+func tablesJSON(tables []domain.Table) []map[string]any {
+	out := make([]map[string]any, 0, len(tables))
+	for _, t := range tables {
+		cols := make([]map[string]any, 0, len(t.Columns))
+		for _, c := range t.Columns {
+			cols = append(cols, map[string]any{
+				"name":          c.Name,
+				"original_type": c.OriginalType,
+			})
+		}
+		out = append(out, map[string]any{
+			"name":         t.Name,
+			"column_count": len(t.Columns),
+			"columns":      cols,
+		})
+	}
+	return out
 }
