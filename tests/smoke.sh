@@ -18,6 +18,7 @@ ID=$(echo "$RESP" | sed -n 's/.*"id":"\([^"]*\)".*/\1/p')
 test -n "$ID"
 
 echo "$RESP" | grep -q '"name":"a"'
+echo "$RESP" | grep -q '"normalized_type":"int"'
 echo "$RESP" | grep -q '"name":"id"'
 echo "$RESP" | grep -qi 'INT'
 
@@ -27,6 +28,7 @@ echo "$GET_RESP" | grep -q "$ID"
 echo "$GET_RESP" | grep -q '"name":"a"'
 echo "$GET_RESP" | grep -q '"name":"id"'
 echo "$GET_RESP" | grep -qi 'INT'
+echo "$GET_RESP" | grep -q '"normalized_type":"int"'
 
 echo "== list =="
 LIST_RESP=$(curl -sf "$BASE/analysis-sessions")
@@ -46,6 +48,26 @@ test "$CODE" = "204"
 echo "== get after delete =="
 CODE=$(curl -s -o /dev/null -w "%{http_code}" "$BASE/analysis-sessions/$ID")
 test "$CODE" = "404"
+
+echo "== normalize varchar =="
+RESP3=$(curl -sf -X POST "$BASE/analysis-sessions" \
+  -H 'Content-Type: application/json' \
+  -d '{"engine":"postgres","source_name":"v.sql","ddl_text":"CREATE TABLE t (name VARCHAR(100));"}')
+echo "$RESP3"
+echo "$RESP3" | grep -q '"normalized_type":"varchar"'
+echo "$RESP3" | grep -q '"length":100'
+ID3=$(echo "$RESP3" | sed -n 's/.*"id":"\([^"]*\)".*/\1/p')
+test -n "$ID3"
+curl -s -o /dev/null -X DELETE "$BASE/analysis-sessions/$ID3"
+
+echo "== normalize sqlserver nvarchar =="
+RESP4=$(curl -sf -X POST "$BASE/analysis-sessions" \
+  -H 'Content-Type: application/json' \
+  -d '{"engine":"sqlserver","source_name":"s.sql","ddl_text":"CREATE TABLE t (name NVARCHAR(50));"}')
+echo "$RESP4"
+echo "$RESP4" | grep -q '"normalized_type":"varchar"'
+echo "$RESP4" | grep -q '"length":50'
+
 
 echo "== parse two tables =="
 RESP2=$(curl -sf -X POST "$BASE/analysis-sessions" \

@@ -27,19 +27,20 @@ func CreateSession(store *SessionStore, in CreateSessionInput) (domain.AnalysisS
 		return domain.AnalysisSession{}, ErrInvalidDDL
 	}
 
-	engine, ok := domain.ParseEngine(strings.ToLower(strings.TrimSpace(in.Engine)))
+	eng, ok := domain.ParseEngine(strings.ToLower(strings.TrimSpace(in.Engine)))
 	if !ok {
 		return domain.AnalysisSession{}, ErrInvalidEngine
 	}
 
 	tables := parser.ParseTables(ddl)
+	tables = normalizeTables(eng, tables)
 	if len(tables) == 0 {
 		return domain.AnalysisSession{}, ErrNoTablesFound
 	}
 
 	session := domain.AnalysisSession{
 		ID:         fmt.Sprintf("as_%d", time.Now().UnixNano()),
-		Engine:     engine,
+		Engine:     eng,
 		SourceName: in.SourceName,
 		DDLText:    ddl,
 		Status:     "created",

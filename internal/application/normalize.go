@@ -1,0 +1,28 @@
+package application
+
+import (
+	"github.com/mpraes/tabyte/internal/domain"
+	"github.com/mpraes/tabyte/internal/engine/postgres"
+	"github.com/mpraes/tabyte/internal/engine/sqlserver"
+)
+
+func normalizeTables(eng domain.Engine, tables []domain.Table) []domain.Table {
+	out := make([]domain.Table, len(tables))
+	for i, t := range tables {
+		cols := make([]domain.Column, len(t.Columns))
+		for j, c := range t.Columns {
+			switch eng {
+			case domain.EnginePostgres:
+				cols[j] = postgres.NormalizeColumn(c)
+			case domain.EngineSQLServer:
+				cols[j] = sqlserver.NormalizeColumn(c)
+			default:
+				c.NormalizedType = "unknown"
+				cols[j] = c
+			}
+		}
+		t.Columns = cols
+		out[i] = t
+	}
+	return out
+}
