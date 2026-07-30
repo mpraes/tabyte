@@ -23,6 +23,8 @@ echo "$RESP" | grep -q '"name":"id"'
 echo "$RESP" | grep -qi 'INT'
 echo "$RESP" | grep -q '"estimated_bytes":4'
 echo "$RESP" | grep -q '"estimated_row_bytes":28'   # 23 + 1 + 4
+echo "$RESP" | grep -q '"assumed_row_count":1000'
+echo "$RESP" | grep -q '"estimated_table_bytes":28000'   # 28 * 1000
 
 echo "== get $ID =="
 GET_RESP=$(curl -sf "$BASE/analysis-sessions/$ID")

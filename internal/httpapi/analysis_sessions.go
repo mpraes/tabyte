@@ -150,9 +150,13 @@ func tablesJSON(tables []domain.Table) []map[string]any {
 			"name":         t.Name,
 			"column_count": len(t.Columns),
 			"columns":      cols,
+			"assumed_row_count": t.AssumedRowCount,
 		}
 		if t.EstimatedRowBytes != nil {
 			item["estimated_row_bytes"] = *t.EstimatedRowBytes
+		}
+		if t.EstimatedTableBytes != nil {
+			item["estimated_table_bytes"] = *t.EstimatedTableBytes
 		}
 		out = append(out, item)
 	}
