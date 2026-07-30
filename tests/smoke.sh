@@ -132,9 +132,18 @@ echo "$RESP_W" | grep -q '"code":"WIDE_VARCHAR"'
 echo "$RESP_W" | grep -q '"warning_count":1'
 echo "$RESP_W" | grep -q '"code":"WIDE_ROW"'
 echo "$RESP_W" | grep -q '"signal_count":1'
-# ...
 
+echo "== parse indexes =="
+RESP_IX=$(curl -sf -X POST "$BASE/analysis-sessions" \
+  -H 'Content-Type: application/json' \
+  -d '{"engine":"postgres","source_name":"ix.sql","ddl_text":"CREATE TABLE users (id INT PRIMARY KEY, email VARCHAR(100)); CREATE INDEX idx_users_email ON users (email);"}')
+echo "$RESP_IX"
+echo "$RESP_IX" | grep -q '"kind":"primary_key"'
+echo "$RESP_IX" | grep -q '"kind":"index"'
+echo "$RESP_IX" | grep -q '"name":"idx_users_email"'
+ID_IX=$(echo "$RESP_IX" | sed -n 's/.*"id":"\([^"]*\)".*/\1/p')
+test -n "$ID_IX"
+curl -s -o /dev/null -X DELETE "$BASE/analysis-sessions/$ID_IX"
 echo "== ui =="
 curl -sf "http://127.0.0.1:8787/" | grep -qi 'Tabyte'
-
 echo "OK: all smoke checks passed"

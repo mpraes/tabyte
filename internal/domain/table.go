@@ -20,4 +20,5 @@ type Table struct {
 	GrowthHorizon       int64
 	ProjectedRowCount   *int64
 	ProjectedTableBytes *int64
+	Indexes             []Index
 }

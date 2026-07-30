@@ -200,6 +200,16 @@ func tablesJSONWithCalculation(tables []domain.Table) []map[string]any {
 		if t.ProjectedTableBytes != nil {
 			item["projected_table_bytes"] = *t.ProjectedTableBytes
 		}
+		idxs := make([]map[string]any, 0, len(t.Indexes))
+		for _, ix := range t.Indexes {
+			idxs = append(idxs, map[string]any{
+				"name":    ix.Name,
+				"kind":    ix.Kind,
+				"columns": ix.Columns,
+			})
+		}
+		item["indexes"] = idxs
+		item["index_count"] = len(t.Indexes)
 		out = append(out, item)
 	}
 	return out

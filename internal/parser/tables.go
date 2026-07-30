@@ -31,13 +31,31 @@ func ParseTables(ddl string) []domain.Table {
 
 		bodyStart := findOpenParen(ddl, loc[1]) // after full CREATE TABLE match
 		var cols []domain.Column
+		var indexes []domain.Index
 		if bodyStart >= 0 {
 			if body, ok := extractParenBody(ddl, bodyStart); ok {
 				cols = parseColumns(body)
+				indexes = parseIndexesFromTableBody(name, body)
 			}
 		}
 
-		out = append(out, domain.Table{Name: name, Columns: cols})
+		out = append(out, domain.Table{
+			Name:    name,
+			Columns: cols,
+			Indexes: indexes,
+		})
+	}
+	standalone := ParseIndexes(ddl)
+	if len(standalone) > 0 {
+		byTable := map[string]int{}
+		for i, t := range out {
+			byTable[strings.ToLower(t.Name)] = i
+		}
+		for _, idx := range standalone {
+			if i, ok := byTable[strings.ToLower(idx.Table)]; ok {
+				out[i].Indexes = append(out[i].Indexes, idx)
+			}
+		}
 	}
 	return out
 }
