@@ -19,5 +19,8 @@ func NewMux(store *application.SessionStore) *http.ServeMux {
 		HandleUpdateTableRowCount(store),
 	)
 	mux.HandleFunc("GET /", HandleUI)
+	mux.HandleFunc(
+		"PATCH /api/v1/analysis-sessions/{sessionId}/tables/{tableName}/growth",
+		HandleUpdateTableGrowth(store),)
 	return mux
 }

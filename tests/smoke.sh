@@ -64,6 +64,15 @@ CODE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$BASE/analysis-sessions" 
   -d '{"engine":"mysql","ddl_text":"CREATE TABLE t (id INT);"}')
 test "$CODE" = "400"
 
+echo "== growth projection =="
+GROWTH_RESP=$(curl -sf -X PATCH "$BASE/analysis-sessions/$ID/tables/a/growth" \
+  -H 'Content-Type: application/json' \
+  -d '{"rows_per_period":100,"period":"day","horizon":30}')
+echo "$GROWTH_RESP"
+echo "$GROWTH_RESP" | grep -q '"projected_row_count":8000'
+echo "$GROWTH_RESP" | grep -q '"projected_table_bytes":224000'
+echo "$GROWTH_RESP" | grep -q '"projected_total_bytes":224000'
+
 echo "== delete =="
 CODE=$(curl -s -o /dev/null -w "%{http_code}" -X DELETE "$BASE/analysis-sessions/$ID")
 test "$CODE" = "204"

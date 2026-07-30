@@ -14,4 +14,10 @@ type Table struct {
 	AssumedRowCount     int64
 	EstimatedTableBytes *int64
 	Calculation         *RowCalculation
+
+	GrowthRowsPerPeriod int64
+	GrowthPeriod        string // hour|day|month
+	GrowthHorizon       int64
+	ProjectedRowCount   *int64
+	ProjectedTableBytes *int64
 }
