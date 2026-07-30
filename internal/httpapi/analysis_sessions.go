@@ -31,10 +31,18 @@ func HandleCreateAnalysisSession(store *application.SessionStore) http.HandlerFu
 			return
 		}
 
+		tables := make([]map[string]any, 0, len(session.Tables))
+		for _, t := range session.Tables {
+			tables = append(tables, map[string]any{
+				"name": t.Name,
+			})
+		}
 		WriteJSON(w, http.StatusCreated, map[string]any{
 			"id":     session.ID,
 			"engine": session.Engine,
 			"status": session.Status,
+			"table_count": len(session.Tables),
+			"tables":      tables,
 		})
 	}
 }
@@ -47,11 +55,18 @@ func HandleGetAnalysisSession(store *application.SessionStore) http.HandlerFunc 
 			WriteError(w, http.StatusNotFound, "NOT_FOUND", "session not found")
 			return
 		}
+		tables := make([]map[string]any, 0, len(session.Tables))
+		for _, t := range session.Tables {
+			tables = append(tables, map[string]any{
+				"name": t.Name,
+			})
+		}
 		WriteJSON(w, http.StatusOK, map[string]any{
 			"id":          session.ID,
 			"engine":      session.Engine,
 			"source_name": session.SourceName,
 			"status":      session.Status,
+			"tables":      tables,
 		})
 	}
 }
@@ -66,6 +81,7 @@ func HandleListAnalysisSessions(store *application.SessionStore) http.HandlerFun
 				"engine":      s.Engine,
 				"source_name": s.SourceName,
 				"status":      s.Status,
+				"table_count": len(s.Tables),
 			})
 		}
 		WriteJSON(w, http.StatusOK, items)

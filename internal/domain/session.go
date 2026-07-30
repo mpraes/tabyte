@@ -6,4 +6,5 @@ type AnalysisSession struct {
 	SourceName string
 	DDLText    string
 	Status     string
+	Tables     []Table
 }
