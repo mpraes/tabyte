@@ -1,2 +1,2 @@
-// Package runtime boots and owns the process lifecycle.
+// Package platform holds OS/integration helpers (browser, paths).
 package platform
