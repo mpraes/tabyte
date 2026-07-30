@@ -19,6 +19,11 @@ type updateTableRowCountRequest struct {
 	AssumedRowCount int64 `json:"assumed_row_count"`
 }
 
+type updateTableGrowthRequest struct {
+	RowsPerPeriod int64  `json:"rows_per_period"`
+	Period        string `json:"period"`
+	Horizon       int64  `json:"horizon"`
+}
 
 
 func HandleCreateAnalysisSession(store *application.SessionStore) http.HandlerFunc {
@@ -184,6 +189,17 @@ func tablesJSONWithCalculation(tables []domain.Table) []map[string]any {
 				// omit index_bytes for now
 			}
 		}
+		if t.GrowthHorizon > 0 {
+			item["growth_rows_per_period"] = t.GrowthRowsPerPeriod
+			item["growth_period"] = t.GrowthPeriod
+			item["growth_horizon"] = t.GrowthHorizon
+		}
+		if t.ProjectedRowCount != nil {
+			item["projected_row_count"] = *t.ProjectedRowCount
+		}
+		if t.ProjectedTableBytes != nil {
+			item["projected_table_bytes"] = *t.ProjectedTableBytes
+		}
 		out = append(out, item)
 	}
 	return out
@@ -254,6 +270,41 @@ func HandleUpdateTableRowCount(store *application.SessionStore) http.HandlerFunc
 			"signals":       signalsJSON(session.Signals),
 			"signal_count":  len(session.Signals),
 			"estimated_total_bytes": session.EstimatedTotalBytes,
+		})
+	}
+}
+
+func HandleUpdateTableGrowth(store *application.SessionStore) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		sessionID := r.PathValue("sessionId")
+		tableName := r.PathValue("tableName")
+		var req updateTableGrowthRequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			WriteError(w, http.StatusBadRequest, "VALIDATION_ERROR", "invalid JSON body")
+			return
+		}
+		session, err := application.UpdateTableGrowth(store, sessionID, tableName, req.RowsPerPeriod, req.Period, req.Horizon)
+		if err != nil {
+			switch {
+			case errors.Is(err, application.ErrSessionNotFound),
+				errors.Is(err, application.ErrTableNotFound):
+				WriteError(w, http.StatusNotFound, "NOT_FOUND", err.Error())
+			default:
+				WriteError(w, http.StatusBadRequest, "VALIDATION_ERROR", err.Error())
+			}
+			return
+		}
+		WriteJSON(w, http.StatusOK, map[string]any{
+			"id":                     session.ID,
+			"engine":                 session.Engine,
+			"status":                 session.Status,
+			"tables":                 tablesJSONWithCalculation(session.Tables),
+			"estimated_total_bytes":  session.EstimatedTotalBytes,
+			"projected_total_bytes":  session.ProjectedTotalBytes,
+			"warnings":               warningsJSON(session.Warnings),
+			"warning_count":          len(session.Warnings),
+			"signals":                signalsJSON(session.Signals),
+			"signal_count":           len(session.Signals),
 		})
 	}
 }
