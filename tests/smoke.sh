@@ -25,6 +25,7 @@ echo "$RESP" | grep -q '"estimated_bytes":4'
 echo "$RESP" | grep -q '"estimated_row_bytes":28'   # 23 + 1 + 4
 echo "$RESP" | grep -q '"assumed_row_count":1000'
 echo "$RESP" | grep -q '"estimated_table_bytes":28000'   # 28 * 1000
+echo "$RESP" | grep -q '"estimated_total_bytes":28000'
 
 echo "== get $ID =="
 GET_RESP=$(curl -sf "$BASE/analysis-sessions/$ID")
@@ -33,6 +34,7 @@ echo "$GET_RESP" | grep -q '"name":"a"'
 echo "$GET_RESP" | grep -q '"name":"id"'
 echo "$GET_RESP" | grep -qi 'INT'
 echo "$GET_RESP" | grep -q '"normalized_type":"int"'
+echo "$GET_RESP" | grep -q '"estimated_total_bytes":28000'
 
 echo "== list =="
 LIST_RESP=$(curl -sf "$BASE/analysis-sessions")
@@ -87,6 +89,7 @@ echo "$RESP2"
 echo "$RESP2" | grep -q '"name":"users"'
 echo "$RESP2" | grep -q '"name":"orders"'
 ID2=$(echo "$RESP2" | sed -n 's/.*"id":"\([^"]*\)".*/\1/p')
+echo "$RESP2" | grep -q '"estimated_total_bytes":56000'
 
 # clean up second session so list stays tidy
 curl -s -o /dev/null -X DELETE "$BASE/analysis-sessions/$ID2"

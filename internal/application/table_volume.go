@@ -15,3 +15,13 @@ func estimateTableVolume(table domain.Table) domain.Table {
 	table.EstimatedTableBytes = &total
 	return table
 }
+
+func sumSchemaBytes(tables []domain.Table) int64 {
+	total := int64(0)
+	for _, t := range tables {
+		if t.EstimatedTableBytes != nil {
+			total += *t.EstimatedTableBytes
+		}
+	}
+	return total
+}
