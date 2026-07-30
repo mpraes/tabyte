@@ -26,6 +26,9 @@ echo "$RESP" | grep -q '"estimated_row_bytes":28'   # 23 + 1 + 4
 echo "$RESP" | grep -q '"assumed_row_count":1000'
 echo "$RESP" | grep -q '"estimated_table_bytes":28000'   # 28 * 1000
 echo "$RESP" | grep -q '"estimated_total_bytes":28000'
+echo "$RESP" | grep -q '"column_payload_bytes":4'
+echo "$RESP" | grep -q '"row_header_bytes":23'
+echo "$RESP" | grep -q '"null_bitmap_bytes":1'
 
 echo "== get $ID =="
 GET_RESP=$(curl -sf "$BASE/analysis-sessions/$ID")
