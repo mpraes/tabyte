@@ -36,6 +36,18 @@ echo "$GET_RESP" | grep -qi 'INT'
 echo "$GET_RESP" | grep -q '"normalized_type":"int"'
 echo "$GET_RESP" | grep -q '"estimated_total_bytes":28000'
 
+echo "== patch row count =="
+PATCH_RESP=$(curl -sf -X PATCH "$BASE/analysis-sessions/$ID/tables/a" \
+  -H 'Content-Type: application/json' \
+  -d '{"assumed_row_count":5000}')
+echo "$PATCH_RESP"
+echo "$PATCH_RESP" | grep -q '"assumed_row_count":5000'
+echo "$PATCH_RESP" | grep -q '"estimated_table_bytes":140000'
+echo "$PATCH_RESP" | grep -q '"estimated_total_bytes":140000'
+GET_RESP2=$(curl -sf "$BASE/analysis-sessions/$ID")
+echo "$GET_RESP2" | grep -q '"assumed_row_count":5000'
+echo "$GET_RESP2" | grep -q '"estimated_total_bytes":140000'
+
 echo "== list =="
 LIST_RESP=$(curl -sf "$BASE/analysis-sessions")
 echo "$LIST_RESP" | grep -q "$ID"
@@ -90,6 +102,9 @@ echo "$RESP2" | grep -q '"name":"users"'
 echo "$RESP2" | grep -q '"name":"orders"'
 ID2=$(echo "$RESP2" | sed -n 's/.*"id":"\([^"]*\)".*/\1/p')
 echo "$RESP2" | grep -q '"estimated_total_bytes":56000'
+GET_RESP2=$(curl -sf "$BASE/analysis-sessions/$ID2")
+echo "$GET_RESP2" | grep -q '"assumed_row_count":1000'
+echo "$GET_RESP2" | grep -q '"estimated_total_bytes":56000'
 
 # clean up second session so list stays tidy
 curl -s -o /dev/null -X DELETE "$BASE/analysis-sessions/$ID2"
