@@ -123,10 +123,21 @@ func tablesJSON(tables []domain.Table) []map[string]any {
 	for _, t := range tables {
 		cols := make([]map[string]any, 0, len(t.Columns))
 		for _, c := range t.Columns {
-			cols = append(cols, map[string]any{
-				"name":          c.Name,
-				"original_type": c.OriginalType,
-			})
+			m := map[string]any{
+				"name":            c.Name,
+				"original_type":   c.OriginalType,
+				"normalized_type": c.NormalizedType,
+			}
+			if c.Length != nil {
+				m["length"] = *c.Length
+			}
+			if c.Precision != nil {
+				m["precision"] = *c.Precision
+			}
+			if c.Scale != nil {
+				m["scale"] = *c.Scale
+			}
+			cols = append(cols, m)
 		}
 		out = append(out, map[string]any{
 			"name":         t.Name,
