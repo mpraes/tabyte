@@ -85,8 +85,10 @@ func UpdateTableRowCount(store *SessionStore, sessionID, tableName string, rows 
 	found := false
 	for i, t := range session.Tables {
 		if t.Name == tableName {
-			session.Tables[i].AssumedRowCount = rows
-			session.Tables[i] = estimateTableVolume(session.Tables[i])
+			t.AssumedRowCount = rows
+			t = estimateTableVolume(t)
+			t = estimateIndexes(session.Engine, t)
+			session.Tables[i] = t
 			found = true
 			break
 		}
