@@ -32,6 +32,7 @@ func enrichTables(eng domain.Engine, tables []domain.Table) []domain.Table {
 			t = sqlserver.EstimateRow(t)
 		}
 		t = estimateTableVolume(t)
+		t = estimateIndexes(eng, t)
 		out[i] = t
 	}
 	return out

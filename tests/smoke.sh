@@ -144,6 +144,12 @@ echo "$RESP_IX" | grep -q '"name":"idx_users_email"'
 ID_IX=$(echo "$RESP_IX" | sed -n 's/.*"id":"\([^"]*\)".*/\1/p')
 test -n "$ID_IX"
 curl -s -o /dev/null -X DELETE "$BASE/analysis-sessions/$ID_IX"
+
+echo "$RESP_IX" | grep -q '"kind":"primary_key"'
+echo "$RESP_IX" | grep -q '"estimated_bytes":4000'   # careful: also matches column bytes — prefer tighter check
+echo "$RESP_IX" | grep -q '"estimated_total_bytes":134000'
+echo "$RESP_IX" | grep -q '"index_bytes":55000'       # 4000+51000 in calculation
+
 echo "== ui =="
 curl -sf "http://127.0.0.1:8787/" | grep -qi 'Tabyte'
 echo "OK: all smoke checks passed"

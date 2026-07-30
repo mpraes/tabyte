@@ -5,6 +5,7 @@ type RowCalculation struct {
 	RowHeaderBytes     int64
 	NullBitmapBytes    int64
 	EstimatedRowBytes  int64
+	IndexBytes         int64
 }
 
 type Table struct {
