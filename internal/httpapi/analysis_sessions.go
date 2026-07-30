@@ -55,12 +55,14 @@ func HandleCreateAnalysisSession(store *application.SessionStore) http.HandlerFu
 			})
 		}
 		WriteJSON(w, http.StatusCreated, map[string]any{
-			"id":          session.ID,
-			"engine":      session.Engine,
-			"status":      session.Status,
-			"table_count": len(session.Tables),
-			"tables": tablesJSONWithCalculation(session.Tables),
+			"id":                    session.ID,
+			"engine":                session.Engine,
+			"status":                session.Status,
+			"table_count":           len(session.Tables),
+			"tables":                tablesJSONWithCalculation(session.Tables),
 			"estimated_total_bytes": session.EstimatedTotalBytes,
+			"warnings":              warningsJSON(session.Warnings),
+			"warning_count":         len(session.Warnings),
 		})
 	}
 }
@@ -94,6 +96,8 @@ func HandleGetAnalysisSession(store *application.SessionStore) http.HandlerFunc 
 			"source_name": session.SourceName,
 			"status":      session.Status,
 			"tables":      tablesJSONWithCalculation(session.Tables),
+			"warnings":    warningsJSON(session.Warnings),
+			"warning_count":  len(session.Warnings),
 			"estimated_total_bytes": session.EstimatedTotalBytes,
 		})
 	}
@@ -181,6 +185,22 @@ func tablesJSONWithCalculation(tables []domain.Table) []map[string]any {
 	return out
 }
 
+func warningsJSON(warnings []domain.Warning) []map[string]any {
+	out := make([]map[string]any, 0, len(warnings))
+	for _, w := range warnings {
+		item := map[string]any{
+			"code":    w.Code,
+			"message": w.Message,
+			"table":   w.Table,
+		}
+		if w.Column != "" {
+			item["column"] = w.Column
+		}
+		out = append(out, item)
+	}
+	return out
+}
+
 func HandleUpdateTableRowCount(store *application.SessionStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		sessionID := r.PathValue("sessionId")
@@ -205,10 +225,12 @@ func HandleUpdateTableRowCount(store *application.SessionStore) http.HandlerFunc
 		}
 
 		WriteJSON(w, http.StatusOK, map[string]any{
-			"id":                    session.ID,
-			"engine":                session.Engine,
-			"status":                session.Status,
-			"tables":                tablesJSONWithCalculation(session.Tables),
+			"id":          session.ID,
+			"engine":      session.Engine,
+			"status":      session.Status,
+			"tables":      tablesJSONWithCalculation(session.Tables),
+			"warnings":    warningsJSON(session.Warnings),
+			"warning_count":  len(session.Warnings),
 			"estimated_total_bytes": session.EstimatedTotalBytes,
 		})
 	}

@@ -5,6 +5,7 @@ import (
 	"strings"
 	"fmt"
 	"time"
+
 	"github.com/mpraes/tabyte/internal/domain"
 	"github.com/mpraes/tabyte/internal/parser"
 )
@@ -41,15 +42,17 @@ func CreateSession(store *SessionStore, in CreateSessionInput) (domain.AnalysisS
 		return domain.AnalysisSession{}, ErrNoTablesFound
 	}
 	total := sumSchemaBytes(tables) 
+	warnings := collectWarnings(tables)
 
 	session := domain.AnalysisSession{
-		ID:         fmt.Sprintf("as_%d", time.Now().UnixNano()),
-		Engine:     eng,
-		SourceName: in.SourceName,
-		DDLText:    ddl,
-		Status:     "created",
-		Tables:     tables,
+		ID:                  fmt.Sprintf("as_%d", time.Now().UnixNano()),
+		Engine:              eng,
+		SourceName:          in.SourceName,
+		DDLText:             ddl,
+		Status:              "created",
+		Tables:              tables,
 		EstimatedTotalBytes: &total,
+		Warnings:            warnings,
 	}
 	store.Save(session)
 	return session, nil

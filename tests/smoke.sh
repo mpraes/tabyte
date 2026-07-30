@@ -114,4 +114,15 @@ echo "$GET_RESP2" | grep -q '"estimated_total_bytes":56000'
 # clean up second session so list stays tidy
 curl -s -o /dev/null -X DELETE "$BASE/analysis-sessions/$ID2"
 
+echo "== structural warnings =="
+RESP_W=$(curl -sf -X POST "$BASE/analysis-sessions" \
+  -H 'Content-Type: application/json' \
+  -d '{"engine":"postgres","source_name":"w.sql","ddl_text":"CREATE TABLE t (name VARCHAR(500));"}')
+echo "$RESP_W"
+echo "$RESP_W" | grep -q '"code":"WIDE_VARCHAR"'
+echo "$RESP_W" | grep -q '"warning_count":1'
+ID_W=$(echo "$RESP_W" | sed -n 's/.*"id":"\([^"]*\)".*/\1/p')
+test -n "$ID_W"
+curl -s -o /dev/null -X DELETE "$BASE/analysis-sessions/$ID_W"
+
 echo "OK: all smoke checks passed"
