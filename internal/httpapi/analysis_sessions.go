@@ -59,7 +59,7 @@ func HandleCreateAnalysisSession(store *application.SessionStore) http.HandlerFu
 			"engine":      session.Engine,
 			"status":      session.Status,
 			"table_count": len(session.Tables),
-			"tables":      tablesJSON(session.Tables),
+			"tables": tablesJSONWithCalculation(session.Tables),
 			"estimated_total_bytes": session.EstimatedTotalBytes,
 		})
 	}
@@ -93,7 +93,7 @@ func HandleGetAnalysisSession(store *application.SessionStore) http.HandlerFunc 
 			"engine":      session.Engine,
 			"source_name": session.SourceName,
 			"status":      session.Status,
-			"tables":      tablesJSON(session.Tables),
+			"tables":      tablesJSONWithCalculation(session.Tables),
 			"estimated_total_bytes": session.EstimatedTotalBytes,
 		})
 	}
@@ -127,7 +127,7 @@ func HandleDeleteAnalysisSession(store *application.SessionStore) http.HandlerFu
 	}
 }
 
-func tablesJSON(tables []domain.Table) []map[string]any {
+func tablesJSONWithCalculation(tables []domain.Table) []map[string]any {
 	out := make([]map[string]any, 0, len(tables))
 	for _, t := range tables {
 		cols := make([]map[string]any, 0, len(t.Columns))
@@ -167,6 +167,15 @@ func tablesJSON(tables []domain.Table) []map[string]any {
 		if t.EstimatedTableBytes != nil {
 			item["estimated_table_bytes"] = *t.EstimatedTableBytes
 		}
+		if t.Calculation != nil {
+			item["calculation"] = map[string]any{
+				"column_payload_bytes": t.Calculation.ColumnPayloadBytes,
+				"row_header_bytes":     t.Calculation.RowHeaderBytes,
+				"null_bitmap_bytes":    t.Calculation.NullBitmapBytes,
+				"estimated_row_bytes":  t.Calculation.EstimatedRowBytes,
+				// omit index_bytes for now
+			}
+		}
 		out = append(out, item)
 	}
 	return out
@@ -199,7 +208,7 @@ func HandleUpdateTableRowCount(store *application.SessionStore) http.HandlerFunc
 			"id":                    session.ID,
 			"engine":                session.Engine,
 			"status":                session.Status,
-			"tables":                tablesJSON(session.Tables),
+			"tables":                tablesJSONWithCalculation(session.Tables),
 			"estimated_total_bytes": session.EstimatedTotalBytes,
 		})
 	}
