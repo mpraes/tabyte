@@ -87,6 +87,7 @@ O sistema deverá permitir projetar crescimento por tabela com base em taxa simp
 ### RF-14 — Exibir detalhamento por tabela
 
 O sistema deverá apresentar, para cada tabela, nome, número de colunas interpretadas, bytes por linha estimados, quantidade de linhas adotada, volume total estimado e lista das colunas com seus tamanhos individuais.
+API v0: satisfied via create/get tables[] (tablesJSON); dedicated /tables routes deferred.
 
 ### RF-15 — Exibir memória de cálculo
 

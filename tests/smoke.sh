@@ -31,10 +31,12 @@ echo "== get $ID =="
 GET_RESP=$(curl -sf "$BASE/analysis-sessions/$ID")
 echo "$GET_RESP" | grep -q "$ID"
 echo "$GET_RESP" | grep -q '"name":"a"'
+echo "$GET_RESP" | grep -q '"column_count":1'
+echo "$GET_RESP" | grep -q '"estimated_row_bytes":28'
+echo "$GET_RESP" | grep -q '"assumed_row_count":1000'
+echo "$GET_RESP" | grep -q '"estimated_table_bytes":28000'
 echo "$GET_RESP" | grep -q '"name":"id"'
-echo "$GET_RESP" | grep -qi 'INT'
-echo "$GET_RESP" | grep -q '"normalized_type":"int"'
-echo "$GET_RESP" | grep -q '"estimated_total_bytes":28000'
+echo "$GET_RESP" | grep -q '"estimated_bytes":4'
 
 echo "== patch row count =="
 PATCH_RESP=$(curl -sf -X PATCH "$BASE/analysis-sessions/$ID/tables/a" \
