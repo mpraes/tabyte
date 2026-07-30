@@ -9,11 +9,12 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/mpraes/tabyte/internal/httpapi"
 	"github.com/mpraes/tabyte/internal/application"
+	"github.com/mpraes/tabyte/internal/httpapi"
+	"github.com/mpraes/tabyte/internal/platform"
 )
 
-func Serve(addr string) error {
+func Serve(addr string, openBrowser bool) error {
 	store := application.NewSessionStore()
 	mux := httpapi.NewMux(store)
 	srv := &http.Server{
@@ -21,11 +22,21 @@ func Serve(addr string) error {
 		Handler: mux,
 	}
 
+	url := "http://" + addr
 	errCh := make(chan error, 1)
 	go func() {
-		fmt.Printf("Tabyte listening on http://%s\n", addr)
+		fmt.Printf("Tabyte listening on %s\n", url)
 		errCh <- srv.ListenAndServe()
 	}()
+
+	if openBrowser {
+		go func() {
+			time.Sleep(200 * time.Millisecond)
+			if err := platform.OpenBrowser(url); err != nil {
+				fmt.Printf("could not open browser: %v\n", err)
+			}
+		}()
+	}
 
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
