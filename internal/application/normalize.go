@@ -31,7 +31,7 @@ func enrichTables(eng domain.Engine, tables []domain.Table) []domain.Table {
 		case domain.EngineSQLServer:
 			t = sqlserver.EstimateRow(t)
 		}
-
+		t = estimateTableVolume(t)
 		out[i] = t
 	}
 	return out
