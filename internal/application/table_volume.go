@@ -22,6 +22,11 @@ func sumSchemaBytes(tables []domain.Table) int64 {
 		if t.EstimatedTableBytes != nil {
 			total += *t.EstimatedTableBytes
 		}
+		for _, idx := range t.Indexes {
+			if idx.EstimatedBytes != nil {
+				total += *idx.EstimatedBytes
+			}
+		}
 	}
 	return total
 }

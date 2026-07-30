@@ -186,7 +186,7 @@ func tablesJSONWithCalculation(tables []domain.Table) []map[string]any {
 				"row_header_bytes":     t.Calculation.RowHeaderBytes,
 				"null_bitmap_bytes":    t.Calculation.NullBitmapBytes,
 				"estimated_row_bytes":  t.Calculation.EstimatedRowBytes,
-				// omit index_bytes for now
+				"index_bytes":          t.Calculation.IndexBytes,
 			}
 		}
 		if t.GrowthHorizon > 0 {
@@ -202,11 +202,15 @@ func tablesJSONWithCalculation(tables []domain.Table) []map[string]any {
 		}
 		idxs := make([]map[string]any, 0, len(t.Indexes))
 		for _, ix := range t.Indexes {
-			idxs = append(idxs, map[string]any{
+			m := map[string]any{
 				"name":    ix.Name,
 				"kind":    ix.Kind,
 				"columns": ix.Columns,
-			})
+			}
+			if ix.EstimatedBytes != nil {
+				m["estimated_bytes"] = *ix.EstimatedBytes
+			}
+			idxs = append(idxs, m)
 		}
 		item["indexes"] = idxs
 		item["index_count"] = len(t.Indexes)

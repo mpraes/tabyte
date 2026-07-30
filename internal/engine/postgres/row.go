@@ -23,6 +23,7 @@ func EstimateRow(table domain.Table) domain.Table {
 		RowHeaderBytes:     header,
 		NullBitmapBytes:    nullBitmap,
 		EstimatedRowBytes:  total,
+		IndexBytes:         0,
 	}
 	return table
 }
