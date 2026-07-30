@@ -37,3 +37,18 @@ func TestParseTablesColumns(t *testing.T) {
 		t.Fatalf("col1: %+v", got[0].Columns[1])
 	}
 }
+
+func TestParsePrimaryKeyAndIndex(t *testing.T) {
+	ddl := `
+CREATE TABLE users (
+  id INT PRIMARY KEY,
+  email VARCHAR(100),
+  UNIQUE (email)
+);
+CREATE INDEX idx_users_email ON users (email);
+`
+	got := ParseTables(ddl)
+	if len(got) != 1 || len(got[0].Indexes) < 2 {
+		t.Fatalf("indexes: %+v", got[0].Indexes)
+	}
+}
