@@ -37,6 +37,7 @@ func CreateSession(store *SessionStore, in CreateSessionInput) (domain.AnalysisS
 	if len(tables) == 0 {
 		return domain.AnalysisSession{}, ErrNoTablesFound
 	}
+	total := sumSchemaBytes(tables) 
 
 	session := domain.AnalysisSession{
 		ID:         fmt.Sprintf("as_%d", time.Now().UnixNano()),
@@ -45,6 +46,7 @@ func CreateSession(store *SessionStore, in CreateSessionInput) (domain.AnalysisS
 		DDLText:    ddl,
 		Status:     "created",
 		Tables:     tables,
+		EstimatedTotalBytes: &total,
 	}
 	store.Save(session)
 	return session, nil

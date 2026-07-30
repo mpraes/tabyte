@@ -7,4 +7,5 @@ type AnalysisSession struct {
 	DDLText    string
 	Status     string
 	Tables     []Table
+	EstimatedTotalBytes *int64
 }

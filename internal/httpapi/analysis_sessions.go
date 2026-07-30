@@ -53,6 +53,7 @@ func HandleCreateAnalysisSession(store *application.SessionStore) http.HandlerFu
 			"status":      session.Status,
 			"table_count": len(session.Tables),
 			"tables":      tablesJSON(session.Tables),
+			"estimated_total_bytes": session.EstimatedTotalBytes,
 		})
 	}
 }
@@ -86,6 +87,7 @@ func HandleGetAnalysisSession(store *application.SessionStore) http.HandlerFunc 
 			"source_name": session.SourceName,
 			"status":      session.Status,
 			"tables":      tablesJSON(session.Tables),
+			"estimated_total_bytes": session.EstimatedTotalBytes,
 		})
 	}
 }
