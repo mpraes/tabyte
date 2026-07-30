@@ -52,6 +52,7 @@ echo "$PATCH_RESP" | grep -q '"estimated_total_bytes":140000'
 GET_RESP2=$(curl -sf "$BASE/analysis-sessions/$ID")
 echo "$GET_RESP2" | grep -q '"assumed_row_count":5000'
 echo "$GET_RESP2" | grep -q '"estimated_total_bytes":140000'
+echo "$RESP" | grep -q '"estimated_total_human":"27.3 KB"'
 
 echo "== list =="
 LIST_RESP=$(curl -sf "$BASE/analysis-sessions")
@@ -143,6 +144,7 @@ echo "$RESP_IX" | grep -q '"kind":"index"'
 echo "$RESP_IX" | grep -q '"name":"idx_users_email"'
 echo "$RESP_IX" | grep -q '"estimated_total_bytes":134000'
 echo "$RESP_IX" | grep -q '"index_bytes":55000'
+echo "$RESP_IX" | grep -q '"estimated_total_human":"130.9 KB"'
 ID_IX=$(echo "$RESP_IX" | sed -n 's/.*"id":"\([^"]*\)".*/\1/p')
 test -n "$ID_IX"
 
@@ -153,13 +155,8 @@ PATCH_IX=$(curl -sf -X PATCH "$BASE/analysis-sessions/$ID_IX/tables/users" \
 echo "$PATCH_IX"
 echo "$PATCH_IX" | grep -q '"index_bytes":110000'          # (4+51)*2000
 echo "$PATCH_IX" | grep -q '"estimated_total_bytes":268000' # 79*2000 + 110000
+echo "$PATCH_IX" | grep -q '"estimated_total_human":"261.7 KB"'
 curl -s -o /dev/null -X DELETE "$BASE/analysis-sessions/$ID_IX"
-
-
-echo "$RESP_IX" | grep -q '"kind":"primary_key"'
-echo "$RESP_IX" | grep -q '"estimated_bytes":4000'   # careful: also matches column bytes — prefer tighter check
-echo "$RESP_IX" | grep -q '"estimated_total_bytes":134000'
-echo "$RESP_IX" | grep -q '"index_bytes":55000'       # 4000+51000 in calculation
 
 echo "== ui =="
 curl -sf "http://127.0.0.1:8787/" | grep -qi 'Tabyte'

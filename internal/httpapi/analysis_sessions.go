@@ -59,7 +59,7 @@ func HandleCreateAnalysisSession(store *application.SessionStore) http.HandlerFu
 				"columns":      cols,
 			})
 		}
-		WriteJSON(w, http.StatusCreated, map[string]any{
+		data := map[string]any{
 			"id":                    session.ID,
 			"engine":                session.Engine,
 			"status":                session.Status,
@@ -70,7 +70,11 @@ func HandleCreateAnalysisSession(store *application.SessionStore) http.HandlerFu
 			"warning_count":         len(session.Warnings),
 			"signals":               signalsJSON(session.Signals),
 			"signal_count":          len(session.Signals),
-		})
+		}
+		for k, v := range humanTotalBytes(session) {
+			data[k] = v
+		}
+		WriteJSON(w, http.StatusCreated, data)
 	}
 }
 
@@ -97,18 +101,22 @@ func HandleGetAnalysisSession(store *application.SessionStore) http.HandlerFunc 
 				"columns":      cols,
 			})
 		}
-		WriteJSON(w, http.StatusOK, map[string]any{
-			"id":          session.ID,
-			"engine":      session.Engine,
-			"source_name": session.SourceName,
-			"status":      session.Status,
-			"tables":      tablesJSONWithCalculation(session.Tables),
-			"warnings":    warningsJSON(session.Warnings),
-			"warning_count":  len(session.Warnings),
-			"signals":       signalsJSON(session.Signals),
-			"signal_count":  len(session.Signals),
+		data := map[string]any{
+			"id":                    session.ID,
+			"engine":                session.Engine,
+			"source_name":           session.SourceName,
+			"status":                session.Status,
+			"tables":                tablesJSONWithCalculation(session.Tables),
+			"warnings":              warningsJSON(session.Warnings),
+			"warning_count":         len(session.Warnings),
+			"signals":               signalsJSON(session.Signals),
+			"signal_count":          len(session.Signals),
 			"estimated_total_bytes": session.EstimatedTotalBytes,
-		})
+		}
+		for k, v := range humanTotalBytes(session) {
+			data[k] = v
+		}
+		WriteJSON(w, http.StatusOK, data)
 	}
 }
 
@@ -274,17 +282,21 @@ func HandleUpdateTableRowCount(store *application.SessionStore) http.HandlerFunc
 			return
 		}
 
-		WriteJSON(w, http.StatusOK, map[string]any{
-			"id":          session.ID,
-			"engine":      session.Engine,
-			"status":      session.Status,
-			"tables":      tablesJSONWithCalculation(session.Tables),
-			"warnings":    warningsJSON(session.Warnings),
-			"warning_count":  len(session.Warnings),
-			"signals":       signalsJSON(session.Signals),
-			"signal_count":  len(session.Signals),
+		data := map[string]any{
+			"id":                    session.ID,
+			"engine":                session.Engine,
+			"status":                session.Status,
+			"tables":                tablesJSONWithCalculation(session.Tables),
+			"warnings":              warningsJSON(session.Warnings),
+			"warning_count":         len(session.Warnings),
+			"signals":               signalsJSON(session.Signals),
+			"signal_count":          len(session.Signals),
 			"estimated_total_bytes": session.EstimatedTotalBytes,
-		})
+		}
+		for k, v := range humanTotalBytes(session) {
+			data[k] = v
+		}
+		WriteJSON(w, http.StatusOK, data)
 	}
 }
 
@@ -308,17 +320,21 @@ func HandleUpdateTableGrowth(store *application.SessionStore) http.HandlerFunc {
 			}
 			return
 		}
-		WriteJSON(w, http.StatusOK, map[string]any{
-			"id":                     session.ID,
-			"engine":                 session.Engine,
-			"status":                 session.Status,
-			"tables":                 tablesJSONWithCalculation(session.Tables),
-			"estimated_total_bytes":  session.EstimatedTotalBytes,
-			"projected_total_bytes":  session.ProjectedTotalBytes,
-			"warnings":               warningsJSON(session.Warnings),
-			"warning_count":          len(session.Warnings),
-			"signals":                signalsJSON(session.Signals),
-			"signal_count":           len(session.Signals),
-		})
+		data := map[string]any{
+			"id":                    session.ID,
+			"engine":                session.Engine,
+			"status":                session.Status,
+			"tables":                tablesJSONWithCalculation(session.Tables),
+			"estimated_total_bytes": session.EstimatedTotalBytes,
+			"projected_total_bytes": session.ProjectedTotalBytes,
+			"warnings":              warningsJSON(session.Warnings),
+			"warning_count":         len(session.Warnings),
+			"signals":               signalsJSON(session.Signals),
+			"signal_count":          len(session.Signals),
+		}
+		for k, v := range humanTotalBytes(session) {
+			data[k] = v
+		}
+		WriteJSON(w, http.StatusOK, data)
 	}
 }
