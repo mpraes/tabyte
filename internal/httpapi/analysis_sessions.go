@@ -2,6 +2,7 @@ package httpapi
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/mpraes/tabyte/internal/application"
@@ -13,6 +14,12 @@ type createSessionRequest struct {
 	SourceName string `json:"source_name"`
 	DDLText    string `json:"ddl_text"`
 }
+
+type updateTableRowCountRequest struct {
+	AssumedRowCount int64 `json:"assumed_row_count"`
+}
+
+
 
 func HandleCreateAnalysisSession(store *application.SessionStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -163,4 +170,37 @@ func tablesJSON(tables []domain.Table) []map[string]any {
 		out = append(out, item)
 	}
 	return out
+}
+
+func HandleUpdateTableRowCount(store *application.SessionStore) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		sessionID := r.PathValue("sessionId")
+		tableName := r.PathValue("tableName")
+
+		var req updateTableRowCountRequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			WriteError(w, http.StatusBadRequest, "VALIDATION_ERROR", "invalid JSON body")
+			return
+		}
+
+		session, err := application.UpdateTableRowCount(store, sessionID, tableName, req.AssumedRowCount)
+		if err != nil {
+			switch {
+			case errors.Is(err, application.ErrSessionNotFound),
+				errors.Is(err, application.ErrTableNotFound):
+				WriteError(w, http.StatusNotFound, "NOT_FOUND", err.Error())
+			default:
+				WriteError(w, http.StatusBadRequest, "VALIDATION_ERROR", err.Error())
+			}
+			return
+		}
+
+		WriteJSON(w, http.StatusOK, map[string]any{
+			"id":                    session.ID,
+			"engine":                session.Engine,
+			"status":                session.Status,
+			"tables":                tablesJSON(session.Tables),
+			"estimated_total_bytes": session.EstimatedTotalBytes,
+		})
+	}
 }

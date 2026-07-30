@@ -13,6 +13,9 @@ var (
 	ErrInvalidDDL    = errors.New("ddl_text is required")
 	ErrInvalidEngine = errors.New("engine must be sqlserver or postgres")
 	ErrNoTablesFound = errors.New("no tables found in DDL")
+	ErrSessionNotFound = errors.New("session not found")
+	ErrTableNotFound   = errors.New("table not found")
+	ErrInvalidRowCount = errors.New("assumed_row_count must be > 0")
 )
 
 type CreateSessionInput struct {
@@ -62,4 +65,34 @@ func ListSessions(store *SessionStore) []domain.AnalysisSession {
 
 func DeleteSession(store *SessionStore, id string) bool {
 	return store.Delete(id)
+}
+
+func UpdateTableRowCount(store *SessionStore, sessionID, tableName string, rows int64) (domain.AnalysisSession, error) {
+	if rows <= 0 {
+		return domain.AnalysisSession{}, ErrInvalidRowCount
+	}
+
+	session, ok := store.Get(sessionID)
+	if !ok {
+		return domain.AnalysisSession{}, ErrSessionNotFound
+	}
+
+	found := false
+	for i, t := range session.Tables {
+		if t.Name == tableName {
+			session.Tables[i].AssumedRowCount = rows
+			session.Tables[i] = estimateTableVolume(session.Tables[i])
+			found = true
+			break
+		}
+	}
+	if !found {
+		return domain.AnalysisSession{}, ErrTableNotFound
+	}
+
+	total := sumSchemaBytes(session.Tables)
+	session.EstimatedTotalBytes = &total
+
+	store.Save(session)
+	return session, nil
 }
