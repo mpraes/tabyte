@@ -24,6 +24,14 @@ func enrichTables(eng domain.Engine, tables []domain.Table) []domain.Table {
 			}
 		}
 		t.Columns = cols
+
+		switch eng {
+		case domain.EnginePostgres:
+			t = postgres.EstimateRow(t)
+		case domain.EngineSQLServer:
+			t = sqlserver.EstimateRow(t)
+		}
+
 		out[i] = t
 	}
 	return out
