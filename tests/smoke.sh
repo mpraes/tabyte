@@ -17,10 +17,16 @@ echo "$RESP"
 ID=$(echo "$RESP" | sed -n 's/.*"id":"\([^"]*\)".*/\1/p')
 test -n "$ID"
 
+echo "$RESP" | grep -q '"name":"a"'
+echo "$RESP" | grep -q '"name":"id"'
+echo "$RESP" | grep -qi 'INT'
+
 echo "== get $ID =="
 GET_RESP=$(curl -sf "$BASE/analysis-sessions/$ID")
 echo "$GET_RESP" | grep -q "$ID"
 echo "$GET_RESP" | grep -q '"name":"a"'
+echo "$GET_RESP" | grep -q '"name":"id"'
+echo "$GET_RESP" | grep -qi 'INT'
 
 echo "== list =="
 LIST_RESP=$(curl -sf "$BASE/analysis-sessions")

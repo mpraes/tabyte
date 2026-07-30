@@ -32,10 +32,11 @@ func CreateSession(store *SessionStore, in CreateSessionInput) (domain.AnalysisS
 		return domain.AnalysisSession{}, ErrInvalidEngine
 	}
 
-	tables := parser.ParseTableNames(ddl)
+	tables := parser.ParseTables(ddl)
 	if len(tables) == 0 {
 		return domain.AnalysisSession{}, ErrNoTablesFound
 	}
+
 	session := domain.AnalysisSession{
 		ID:         fmt.Sprintf("as_%d", time.Now().UnixNano()),
 		Engine:     engine,
