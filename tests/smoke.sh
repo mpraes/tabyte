@@ -125,4 +125,7 @@ echo "$RESP_W" | grep -q '"code":"WIDE_ROW"'
 echo "$RESP_W" | grep -q '"signal_count":1'
 # ...
 
+echo "== ui =="
+curl -sf "http://127.0.0.1:8787/" | grep -qi 'Tabyte'
+
 echo "OK: all smoke checks passed"
