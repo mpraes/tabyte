@@ -7,7 +7,8 @@ echo "== health =="
 curl -sf "$BASE/health" | grep -q '"status":"ok"'
 
 echo "== info =="
-curl -sf "$BASE/info" | grep -q '"app":"tabyte"'
+INFO=$(curl -sf "$BASE/info")
+echo "$INFO" | grep -q '"app":"tabyte"'
 
 echo "== create =="
 RESP=$(curl -sf -X POST "$BASE/analysis-sessions" \
@@ -187,6 +188,19 @@ echo "$REPROC" | grep -q '"estimated_row_bytes":9'    # 4 + 1 + 4
 echo "$REPROC" | grep -q '"estimated_total_bytes":9000'
 echo "$REPROC" | grep -q '"assumed_row_count":1000'
 curl -s -o /dev/null -X DELETE "$BASE/analysis-sessions/$ID_RP"
+
+if echo "$INFO" | grep -q '"persistence":true'; then
+  echo "== settings (persist) =="
+  PUT_SET=$(curl -sf -X PUT "$BASE/settings" \
+    -H 'Content-Type: application/json' \
+    -d '{"key":"smoke_flag","value":"1","value_type":"string"}')
+  echo "$PUT_SET"
+  echo "$PUT_SET" | grep -q '"key":"smoke_flag"'
+  GET_SET=$(curl -sf "$BASE/settings")
+  echo "$GET_SET"
+  echo "$GET_SET" | grep -q '"key":"smoke_flag"'
+  echo "$GET_SET" | grep -q '"value":"1"'
+fi
 
 echo "== ui =="
 curl -sf "http://127.0.0.1:8787/" | grep -qi 'Tabyte'
