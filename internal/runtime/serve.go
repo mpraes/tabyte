@@ -11,25 +11,66 @@ import (
 
 	"github.com/mpraes/tabyte/internal/application"
 	"github.com/mpraes/tabyte/internal/httpapi"
+	"github.com/mpraes/tabyte/internal/persistence/sqlite"
 	"github.com/mpraes/tabyte/internal/platform"
 )
 
-func Serve(addr string, openBrowser bool) error {
-	store := application.NewSessionStore()
-	mux := httpapi.NewMux(store)
+type ServeOptions struct {
+	Addr         string
+	OpenBrowser  bool
+	Persist      bool
+	DBPath       string
+}
+
+func Serve(opts ServeOptions) error {
+	var (
+		store        *application.SessionStore
+		settings     application.SettingsRepository
+		persistence  bool
+		db           *sqlite.DB
+	)
+
+	if opts.Persist {
+		path := opts.DBPath
+		if path == "" {
+			var err error
+			path, err = sqlite.DefaultPath()
+			if err != nil {
+				return fmt.Errorf("resolve db path: %w", err)
+			}
+		}
+		opened, err := sqlite.Open(path)
+		if err != nil {
+			return fmt.Errorf("open sqlite: %w", err)
+		}
+		db = opened
+		defer db.Close()
+
+		store = application.NewSessionStore(db)
+		if err := store.LoadFromRepo(); err != nil {
+			return fmt.Errorf("load sessions: %w", err)
+		}
+		settings = db
+		persistence = true
+		fmt.Printf("persistence enabled: %s\n", path)
+	} else {
+		store = application.NewSessionStore(nil)
+	}
+
+	mux := httpapi.NewMux(store, settings, persistence)
 	srv := &http.Server{
-		Addr:    addr,
+		Addr:    opts.Addr,
 		Handler: mux,
 	}
 
-	url := "http://" + addr
+	url := "http://" + opts.Addr
 	errCh := make(chan error, 1)
 	go func() {
 		fmt.Printf("Tabyte listening on %s\n", url)
 		errCh <- srv.ListenAndServe()
 	}()
 
-	if openBrowser {
+	if opts.OpenBrowser {
 		go func() {
 			time.Sleep(200 * time.Millisecond)
 			if err := platform.OpenBrowser(url); err != nil {
