@@ -15,3 +15,7 @@ func HandleUI(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	_, _ = w.Write(data)
 }
+
+func HandleUIAssets() http.Handler {
+	return http.StripPrefix("/assets/", http.FileServer(http.FS(webui.Assets)))
+}

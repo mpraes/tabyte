@@ -44,6 +44,8 @@ O servidor HTTP da aplicação deverá operar por padrão apenas em `127.0.0.1` 
 
 O sistema deverá permitir que o usuário cole ou edite manualmente um DDL em uma área de texto para análise. O conteúdo informado deverá ser preservado na sessão corrente até nova limpeza ou substituição manual.
 
+A entrada por arquivo SQL (upload) permanece fora do escopo da primeira entrega; quando existir, poderá preencher metadados como `source_name` a partir do nome do arquivo. Enquanto isso, `source_name` é metadado opcional da sessão (API/persistência), não um campo obrigatório da interface.
+
 ### RF-04 — Selecionar engine de banco de dados
 
 O sistema deverá permitir que o usuário escolha explicitamente a engine de análise entre **SQL Server** e **PostgreSQL**. As regras de parsing, mapeamento de tipos e cálculo deverão ser ajustadas conforme a engine selecionada [1][2].
