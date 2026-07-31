@@ -103,3 +103,53 @@ func UpdateTableRowCount(store *SessionStore, sessionID, tableName string, rows 
 	store.Save(session)
 	return session, nil
 }
+
+// ReprocessSession re-parses DDL with a new engine, keeping assumed row counts per table.
+// Growth projections are cleared (engine-specific volumes change).
+func ReprocessSession(store *SessionStore, sessionID, engine string) (domain.AnalysisSession, error) {
+	session, ok := store.Get(sessionID)
+	if !ok {
+		return domain.AnalysisSession{}, ErrSessionNotFound
+	}
+
+	eng, ok := domain.ParseEngine(strings.ToLower(strings.TrimSpace(engine)))
+	if !ok {
+		return domain.AnalysisSession{}, ErrInvalidEngine
+	}
+
+	prevRows := map[string]int64{}
+	for _, t := range session.Tables {
+		prevRows[strings.ToLower(t.Name)] = t.AssumedRowCount
+	}
+
+	tables := parser.ParseTables(session.DDLText)
+	tables = enrichTables(eng, tables)
+	if len(tables) == 0 {
+		return domain.AnalysisSession{}, ErrNoTablesFound
+	}
+
+	for i, t := range tables {
+		if rows, ok := prevRows[strings.ToLower(t.Name)]; ok && rows > 0 {
+			t.AssumedRowCount = rows
+			t = estimateTableVolume(t)
+			t = estimateIndexes(eng, t)
+		}
+		t.GrowthRowsPerPeriod = 0
+		t.GrowthPeriod = ""
+		t.GrowthHorizon = 0
+		t.ProjectedRowCount = nil
+		t.ProjectedTableBytes = nil
+		tables[i] = t
+	}
+
+	total := sumSchemaBytes(tables)
+	session.Engine = eng
+	session.Tables = tables
+	session.EstimatedTotalBytes = &total
+	session.ProjectedTotalBytes = nil
+	session.Warnings = collectWarnings(tables)
+	session.Signals = collectSignals(tables)
+
+	store.Save(session)
+	return session, nil
+}
