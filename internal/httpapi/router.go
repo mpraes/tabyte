@@ -22,7 +22,8 @@ func NewMux(store *application.SessionStore, settings application.SettingsReposi
 		"PATCH /api/v1/analysis-sessions/{sessionId}/tables/{tableName}",
 		HandleUpdateTableRowCount(store),
 	)
-	mux.HandleFunc("GET /", HandleUI)
+	mux.HandleFunc("GET /{$}", HandleUI)
+	mux.Handle("GET /assets/", HandleUIAssets())
 	mux.HandleFunc(
 		"PATCH /api/v1/analysis-sessions/{sessionId}/tables/{tableName}/growth",
 		HandleUpdateTableGrowth(store),

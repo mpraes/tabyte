@@ -90,25 +90,11 @@ func HandleGetAnalysisSession(store *application.SessionStore) http.HandlerFunc 
 			WriteError(w, http.StatusNotFound, "NOT_FOUND", "session not found")
 			return
 		}
-		tables := make([]map[string]any, 0, len(session.Tables))
-		for _, t := range session.Tables {
-			cols := make([]map[string]any, 0, len(t.Columns))
-			for _, c := range t.Columns {
-				cols = append(cols, map[string]any{
-					"name":          c.Name,
-					"original_type": c.OriginalType,
-				})
-			}
-			tables = append(tables, map[string]any{
-				"name":         t.Name,
-				"column_count": len(t.Columns),
-				"columns":      cols,
-			})
-		}
 		data := map[string]any{
 			"id":                    session.ID,
 			"engine":                session.Engine,
 			"source_name":           session.SourceName,
+			"ddl_text":              session.DDLText,
 			"status":                session.Status,
 			"tables":                tablesJSONWithCalculation(session.Tables),
 			"warnings":              warningsJSON(session.Warnings),
@@ -116,6 +102,7 @@ func HandleGetAnalysisSession(store *application.SessionStore) http.HandlerFunc 
 			"signals":               signalsJSON(session.Signals),
 			"signal_count":          len(session.Signals),
 			"estimated_total_bytes": session.EstimatedTotalBytes,
+			"projected_total_bytes": session.ProjectedTotalBytes,
 		}
 		for k, v := range humanTotalBytes(session) {
 			data[k] = v
