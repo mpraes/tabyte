@@ -2,25 +2,25 @@
 
 Open-source local tool for **storage estimation** and **structural performance signals** from relational DDLs. First engines: **SQL Server** and **PostgreSQL**.
 
-You run a CLI that starts a local HTTP API (`127.0.0.1`). A web UI is planned to sit on top of that API.
+A CLI starts a local HTTP API on `127.0.0.1` and serves an embedded web UI for paste/analyze workflows.
 
 Requirements and design notes live under [`docs/`](docs/).
 
 | Doc | Purpose |
 |---|---|
-| [`docs/requisitos_funcionais.md`](docs/requisitos_funcionais.md) | Functional requirements (RF-01…RF-24) |
-| [`docs/requisitos_nao_funcionais.md`](docs/requisitos_nao_funcionais.md) | Non-functional requirements |
+| [`docs/functional_requirements.md`](docs/functional_requirements.md) | Functional requirements (RF-01…RF-24) |
+| [`docs/non_functional_requirements.md`](docs/non_functional_requirements.md) | Non-functional requirements |
 | [`docs/endpoints.md`](docs/endpoints.md) | Local HTTP API contract |
-| [`docs/arquitetura.md`](docs/arquitetura.md) | Architecture decisions |
-| [`docs/estimativas_postgres_mssql.md`](docs/estimativas_postgres_mssql.md) | Estimation rules reference |
-| [`docs/stack_sugerida.md`](docs/stack_sugerida.md) | Suggested stack |
-| [`docs/entidades_sqlite.md`](docs/entidades_sqlite.md) | Optional SQLite entity model |
+| [`docs/architecture.md`](docs/architecture.md) | Architecture decisions |
+| [`docs/storage_estimates.md`](docs/storage_estimates.md) | Estimation rules reference |
+| [`docs/suggested_stack.md`](docs/suggested_stack.md) | Suggested stack |
+| [`docs/sqlite_entities.md`](docs/sqlite_entities.md) | Optional SQLite entity model |
 
 ---
 
 ## Status
 
-**Backend core is usable via API** (local `127.0.0.1`), with embedded stub UI and optional SQLite persistence.
+**Local product is usable**: API + embedded UI, optional SQLite persistence.
 
 Version reported by `/api/v1/info`: `0.0.1`.
 
@@ -29,7 +29,8 @@ Version reported by `/api/v1/info`: `0.0.1`.
 | Area | What works |
 |---|---|
 | CLI | `tabyte serve` (`--no-open`, `--persist`) |
-| Localhost | Loopback-only bind (RF-23); opens browser by default |
+| Localhost | Loopback-only bind; opens browser by default |
+| Web UI | Engine select, paste DDL, Analyze, session history, settings, table detail, growth, export, warnings/signals/insights |
 | System API | `GET /api/v1/health`, `GET /api/v1/info` (`external_required: false`) |
 | Sessions | Create, get, list, delete, reprocess engine, export JSON/CSV |
 | Estimates | Columns, rows (`calculation`), tables, schema totals (+ human), indexes |
@@ -39,16 +40,14 @@ Version reported by `/api/v1/info`: `0.0.1`.
 | AI hook | `GET .../insights` with disabled provider (RF-24; no external calls) |
 | Tests | Unit tests + [`tests/smoke.sh`](tests/smoke.sh) |
 
-Functional RFs **RF-01…RF-24** for the initial local product are covered at the API/core level. Remaining product work is mainly richer UI and optional real AI providers.
-
 ### Still open (product polish)
 
 | Item | Notes |
 |---|---|
-| Richer web UI | Stub exists at `GET /`; full paste/analyze UX still thin |
 | Dedicated result routes | `/summary`, `/tables`, `/warnings` (today nested in session JSON) |
 | File import | `POST /imports/sql` |
 | Live AI provider | Extension interface exists; default is disabled/noop |
+
 ---
 
 ## Quick start
@@ -57,6 +56,12 @@ Requires Go (see `go.mod`).
 
 ```bash
 go run ./cmd/tabyte serve
+```
+
+With optional persistence:
+
+```bash
+go run ./cmd/tabyte serve --persist
 ```
 
 Server prints:
@@ -123,4 +128,4 @@ tests/smoke.sh              end-to-end API smoke checks
 - Engine choice changes semantics for types, row overhead, and indexes (RN-01).
 - Optional AI insights annotate results only; they never replace the calculation engine (RF-24).
 
-See [`docs/requisitos_funcionais.md`](docs/requisitos_funcionais.md) for the full RF list and first-delivery priority.
+See [`docs/functional_requirements.md`](docs/functional_requirements.md) for the full RF list and first-delivery priority.
