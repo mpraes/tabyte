@@ -170,6 +170,24 @@ echo "$PATCH_IX" | grep -q '"estimated_total_bytes":268000' # 79*2000 + 110000
 echo "$PATCH_IX" | grep -q '"estimated_total_human":"261.7 KB"'
 curl -s -o /dev/null -X DELETE "$BASE/analysis-sessions/$ID_IX"
 
+echo "== reprocess engine =="
+RESP_RP=$(curl -sf -X POST "$BASE/analysis-sessions" \
+  -H 'Content-Type: application/json' \
+  -d '{"engine":"postgres","source_name":"rp.sql","ddl_text":"CREATE TABLE a (id INT);"}')
+echo "$RESP_RP"
+ID_RP=$(echo "$RESP_RP" | sed -n 's/.*"id":"\([^"]*\)".*/\1/p')
+test -n "$ID_RP"
+echo "$RESP_RP" | grep -q '"estimated_row_bytes":28'
+REPROC=$(curl -sf -X PATCH "$BASE/analysis-sessions/$ID_RP" \
+  -H 'Content-Type: application/json' \
+  -d '{"engine":"sqlserver"}')
+echo "$REPROC"
+echo "$REPROC" | grep -q '"engine":"sqlserver"'
+echo "$REPROC" | grep -q '"estimated_row_bytes":9'    # 4 + 1 + 4
+echo "$REPROC" | grep -q '"estimated_total_bytes":9000'
+echo "$REPROC" | grep -q '"assumed_row_count":1000'
+curl -s -o /dev/null -X DELETE "$BASE/analysis-sessions/$ID_RP"
+
 echo "== ui =="
 curl -sf "http://127.0.0.1:8787/" | grep -qi 'Tabyte'
 echo "OK: all smoke checks passed"

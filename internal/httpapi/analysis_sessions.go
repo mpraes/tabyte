@@ -25,6 +25,10 @@ type updateTableGrowthRequest struct {
 	Horizon       int64  `json:"horizon"`
 }
 
+type reprocessSessionRequest struct {
+	Engine string `json:"engine"`
+}
+
 
 func HandleCreateAnalysisSession(store *application.SessionStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -257,6 +261,47 @@ func signalsJSON(signals []domain.Signal) []map[string]any {
 		out = append(out, item)
 	}
 	return out
+}
+
+func HandleReprocessAnalysisSession(store *application.SessionStore) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		sessionID := r.PathValue("sessionId")
+
+		var req reprocessSessionRequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			WriteError(w, http.StatusBadRequest, "VALIDATION_ERROR", "invalid JSON body")
+			return
+		}
+
+		session, err := application.ReprocessSession(store, sessionID, req.Engine)
+		if err != nil {
+			switch {
+			case errors.Is(err, application.ErrSessionNotFound):
+				WriteError(w, http.StatusNotFound, "NOT_FOUND", err.Error())
+			default:
+				WriteError(w, http.StatusBadRequest, "VALIDATION_ERROR", err.Error())
+			}
+			return
+		}
+
+		data := map[string]any{
+			"id":                    session.ID,
+			"engine":                session.Engine,
+			"source_name":           session.SourceName,
+			"status":                session.Status,
+			"tables":                tablesJSONWithCalculation(session.Tables),
+			"warnings":              warningsJSON(session.Warnings),
+			"warning_count":         len(session.Warnings),
+			"signals":               signalsJSON(session.Signals),
+			"signal_count":          len(session.Signals),
+			"estimated_total_bytes": session.EstimatedTotalBytes,
+			"projected_total_bytes": session.ProjectedTotalBytes,
+		}
+		for k, v := range humanTotalBytes(session) {
+			data[k] = v
+		}
+		WriteJSON(w, http.StatusOK, data)
+	}
 }
 
 func HandleUpdateTableRowCount(store *application.SessionStore) http.HandlerFunc {

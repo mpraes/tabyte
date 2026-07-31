@@ -14,6 +14,7 @@ func NewMux(store *application.SessionStore) *http.ServeMux {
 	mux.HandleFunc("GET /api/v1/analysis-sessions/{sessionId}", HandleGetAnalysisSession(store))
 	mux.HandleFunc("GET /api/v1/analysis-sessions", HandleListAnalysisSessions(store))
 	mux.HandleFunc("DELETE /api/v1/analysis-sessions/{sessionId}", HandleDeleteAnalysisSession(store))
+	mux.HandleFunc("PATCH /api/v1/analysis-sessions/{sessionId}", HandleReprocessAnalysisSession(store))
 	mux.HandleFunc(
 		"PATCH /api/v1/analysis-sessions/{sessionId}/tables/{tableName}",
 		HandleUpdateTableRowCount(store),
