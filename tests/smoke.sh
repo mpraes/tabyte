@@ -9,6 +9,9 @@ curl -sf "$BASE/health" | grep -q '"status":"ok"'
 echo "== info =="
 INFO=$(curl -sf "$BASE/info")
 echo "$INFO" | grep -q '"app":"tabyte"'
+echo "$INFO" | grep -q '"mode":"local"'
+echo "$INFO" | grep -q '"external_required":false'
+echo "$INFO" | grep -q '"ai_insights":false'
 
 echo "== create =="
 RESP=$(curl -sf -X POST "$BASE/analysis-sessions" \
@@ -188,6 +191,20 @@ echo "$REPROC" | grep -q '"estimated_row_bytes":9'    # 4 + 1 + 4
 echo "$REPROC" | grep -q '"estimated_total_bytes":9000'
 echo "$REPROC" | grep -q '"assumed_row_count":1000'
 curl -s -o /dev/null -X DELETE "$BASE/analysis-sessions/$ID_RP"
+
+echo "== insights extension (disabled) =="
+RESP_IN=$(curl -sf -X POST "$BASE/analysis-sessions" \
+  -H 'Content-Type: application/json' \
+  -d '{"engine":"postgres","source_name":"ai.sql","ddl_text":"CREATE TABLE a (id INT);"}')
+ID_IN=$(echo "$RESP_IN" | sed -n 's/.*"id":"\([^"]*\)".*/\1/p')
+test -n "$ID_IN"
+INS=$(curl -sf "$BASE/analysis-sessions/$ID_IN/insights")
+echo "$INS"
+echo "$INS" | grep -q '"enabled":false'
+echo "$INS" | grep -q '"insights":\[\]'
+echo "$INS" | grep -q '"count":0'
+curl -s -o /dev/null -w "%{http_code}" "$BASE/analysis-sessions/as_missing/insights" | grep -q '404'
+curl -s -o /dev/null -X DELETE "$BASE/analysis-sessions/$ID_IN"
 
 if echo "$INFO" | grep -q '"persistence":true'; then
   echo "== settings (persist) =="

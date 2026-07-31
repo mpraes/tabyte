@@ -20,7 +20,7 @@ Requirements and design notes live under [`docs/`](docs/).
 
 ## Status
 
-**Backend core is usable via API.** Sessions are in-memory. There is no web UI yet, no SQLite persistence, and no index/alert/export features.
+**Backend core is usable via API** (local `127.0.0.1`), with embedded stub UI and optional SQLite persistence.
 
 Version reported by `/api/v1/info`: `0.0.1`.
 
@@ -28,47 +28,27 @@ Version reported by `/api/v1/info`: `0.0.1`.
 
 | Area | What works |
 |---|---|
-| CLI | `tabyte serve` starts the local server |
-| Localhost | Binds to `127.0.0.1:8787` by default |
-| System API | `GET /api/v1/health`, `GET /api/v1/info` |
-| Sessions | Create, get, list, delete analysis sessions |
-| DDL input | DDL text on create; empty / no-table / bad-engine validation |
-| Engines | `sqlserver` and `postgres` |
-| Parser | `CREATE TABLE` (+ optional schema / `IF NOT EXISTS`); columns and types |
-| Normalization | Engine-specific type mapping (length, precision, scale) |
-| Column estimate | Per-column estimated bytes (common scalar / string / numeric types) |
-| Row estimate | Row header + null bitmap + column payload; exposed as `calculation` |
-| Table / schema volume | Default `assumed_row_count` (1000); schema `estimated_total_bytes` |
-| Row count update | `PATCH /api/v1/analysis-sessions/{id}/tables/{tableName}` |
-| Multi-table DDL | Multiple `CREATE TABLE` in one session |
-| Offline | No external services required for the core path |
-| Tests | Unit tests for parser/normalize/estimate; [`tests/smoke.sh`](tests/smoke.sh) |
+| CLI | `tabyte serve` (`--no-open`, `--persist`) |
+| Localhost | Loopback-only bind (RF-23); opens browser by default |
+| System API | `GET /api/v1/health`, `GET /api/v1/info` (`external_required: false`) |
+| Sessions | Create, get, list, delete, reprocess engine, export JSON/CSV |
+| Estimates | Columns, rows (`calculation`), tables, schema totals (+ human), indexes |
+| Growth | `PATCH .../tables/{name}/growth` |
+| Alerts | Structural warnings (RF-18) and signals (RF-19) |
+| Persistence | Optional SQLite settings + session history (`--persist`) |
+| AI hook | `GET .../insights` with disabled provider (RF-24; no external calls) |
+| Tests | Unit tests + [`tests/smoke.sh`](tests/smoke.sh) |
 
-Rough RF coverage already in place: **RF-02, RF-04–RF-12, RF-14, RF-15 (partial), RF-23**. RF-01 is partial (serve works; browser auto-open not yet).
+Functional RFs **RF-01…RF-24** for the initial local product are covered at the API/core level. Remaining product work is mainly richer UI and optional real AI providers.
 
-### Not done yet
+### Still open (product polish)
 
-Prioritized for a usable first delivery (from the RF doc):
-
-| Priority | Item | Notes |
-|---|---|---|
-| High | Web UI | Paste DDL, pick engine, show tables / breakdown / calculation |
-| High | Open browser on serve | RF-01 |
-| High | Structural alerts | RF-18 (wide columns, generic types, etc.) |
-| High | Performance signals | RF-19 (structural only, not real workload claims) |
-| Medium | Indexes in parser | PK / explicit indexes (RF-16) |
-| Medium | Index storage estimate | Include in `calculation` (RF-17); currently omitted |
-| Medium | Growth projection | Simple rate per hour/day/month (RF-13) |
-| Medium | Reprocess params | Change engine / options without full app reload (RF-21 partial today) |
-| Later | Export JSON/CSV | RF-20 |
-| Later | Optional SQLite | Settings + history (RF-22); package stub only |
-| Later | Dedicated result routes | `/summary`, `/tables`, `/warnings` (today nested in session JSON) |
-| Later | File import | `POST /imports/sql` |
-| Later | AI extension hook | RF-24 |
-| Later | Richer parser | Nullability, unsupported-structure warnings without failing whole DDL |
-
-Also still scaffold-only: `web/` (embed UI), `internal/persistence/sqlite`, `internal/platform` (browser/OS helpers).
-
+| Item | Notes |
+|---|---|
+| Richer web UI | Stub exists at `GET /`; full paste/analyze UX still thin |
+| Dedicated result routes | `/summary`, `/tables`, `/warnings` (today nested in session JSON) |
+| File import | `POST /imports/sql` |
+| Live AI provider | Extension interface exists; default is disabled/noop |
 ---
 
 ## Quick start
@@ -128,9 +108,9 @@ internal/domain/            core models (session, table, column, engine)
 internal/parser/            DDL structure extraction
 internal/engine/postgres/   Postgres normalize + estimate
 internal/engine/sqlserver/  SQL Server normalize + estimate
-internal/persistence/sqlite/  (planned) optional local store
-internal/platform/          (planned) OS helpers (browser, paths)
-web/                        (planned) embedded UI assets
+internal/persistence/sqlite/  optional local store (--persist)
+internal/platform/          OS helpers (browser open)
+web/                        embedded UI assets
 docs/                       product and API docs
 tests/smoke.sh              end-to-end API smoke checks
 ```
@@ -140,7 +120,7 @@ tests/smoke.sh              end-to-end API smoke checks
 ## Design notes
 
 - Estimates are **not** physical measurements on a live instance (RN-02).
-- Engine choice changes semantics for types, row overhead, and (later) indexes (RN-01).
-- Index contribution to storage is intentionally out of the current `calculation` payload.
+- Engine choice changes semantics for types, row overhead, and indexes (RN-01).
+- Optional AI insights annotate results only; they never replace the calculation engine (RF-24).
 
 See [`docs/requisitos_funcionais.md`](docs/requisitos_funcionais.md) for the full RF list and first-delivery priority.
