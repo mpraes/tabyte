@@ -3,6 +3,7 @@ package runtime
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -16,18 +17,22 @@ import (
 )
 
 type ServeOptions struct {
-	Addr         string
-	OpenBrowser  bool
-	Persist      bool
-	DBPath       string
+	Addr        string
+	OpenBrowser bool
+	Persist     bool
+	DBPath      string
 }
 
 func Serve(opts ServeOptions) error {
+	if !isLoopbackAddr(opts.Addr) {
+		return fmt.Errorf("bind address must be localhost/loopback (got %q)", opts.Addr)
+	}
+
 	var (
-		store        *application.SessionStore
-		settings     application.SettingsRepository
-		persistence  bool
-		db           *sqlite.DB
+		store       *application.SessionStore
+		settings    application.SettingsRepository
+		persistence bool
+		db          *sqlite.DB
 	)
 
 	if opts.Persist {
@@ -57,7 +62,8 @@ func Serve(opts ServeOptions) error {
 		store = application.NewSessionStore(nil)
 	}
 
-	mux := httpapi.NewMux(store, settings, persistence)
+	insights := application.DisabledInsightProvider{}
+	mux := httpapi.NewMux(store, settings, insights, persistence)
 	srv := &http.Server{
 		Addr:    opts.Addr,
 		Handler: mux,
@@ -98,4 +104,16 @@ func Serve(opts ServeOptions) error {
 		}
 		return nil
 	}
+}
+
+func isLoopbackAddr(addr string) bool {
+	host, _, err := net.SplitHostPort(addr)
+	if err != nil {
+		return false
+	}
+	if host == "localhost" {
+		return true
+	}
+	ip := net.ParseIP(host)
+	return ip != nil && ip.IsLoopback()
 }
