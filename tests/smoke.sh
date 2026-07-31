@@ -74,6 +74,18 @@ echo "$GROWTH_RESP" | grep -q '"projected_row_count":8000'
 echo "$GROWTH_RESP" | grep -q '"projected_table_bytes":224000'
 echo "$GROWTH_RESP" | grep -q '"projected_total_bytes":224000'
 
+echo "== export json =="
+EXP_JSON=$(curl -sf "$BASE/analysis-sessions/$ID/export?format=json")
+echo "$EXP_JSON"
+echo "$EXP_JSON" | grep -q '"estimated_total_bytes":140000'
+echo "$EXP_JSON" | grep -q '"estimated_total_human":"136.7 KB"'
+
+echo "== export csv =="
+EXP_CSV=$(curl -sf "$BASE/analysis-sessions/$ID/export?format=csv")
+echo "$EXP_CSV"
+echo "$EXP_CSV" | grep -q 'session_id,engine,table'
+echo "$EXP_CSV" | grep -q ',a,'
+
 echo "== delete =="
 CODE=$(curl -s -o /dev/null -w "%{http_code}" -X DELETE "$BASE/analysis-sessions/$ID")
 test "$CODE" = "204"

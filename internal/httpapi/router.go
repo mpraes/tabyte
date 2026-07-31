@@ -22,5 +22,9 @@ func NewMux(store *application.SessionStore) *http.ServeMux {
 	mux.HandleFunc(
 		"PATCH /api/v1/analysis-sessions/{sessionId}/tables/{tableName}/growth",
 		HandleUpdateTableGrowth(store),)
+	mux.HandleFunc(
+			"GET /api/v1/analysis-sessions/{sessionId}/export",
+			HandleExportAnalysisSession(store),
+		)
 	return mux
 }
